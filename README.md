@@ -1,2 +1,2 @@
 # YYBGO-CODE
-YYBGOFor青龙面板
+YYBGOfor青龙面板
