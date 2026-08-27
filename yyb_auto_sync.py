@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# name: YYB-Go 双变量同步助手(详细日志版)
+# name: YYB-Go 双变量同步助手
 # cron: 0 */6 * * *
 # desc: 自动从 YYB-Go 获取账号，并详细打印过程，同时写入青龙面板 YYB_GO 与 XC_SERVERS
 
