@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# name: 小蚕霸王餐小程序 code 发帖版
+# name: 小蚕霸王餐
 # cron: 15 9 * * *
 # desc: 小蚕霸王餐签到活动
 
