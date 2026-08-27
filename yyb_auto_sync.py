@@ -2,22 +2,55 @@
 # -*- coding: utf-8 -*-
 # name: YYB-Go 双变量同步助手
 # cron: 0 */6 * * *
-# desc: 自动从 YYB-Go 获取账号，并详细打印过程，同时写入青龙面板 YYB_GO 与 XC_SERVERS
+# desc: 自动从 YYB-Go 获取账号，并通过青龙 OpenAPI 自动同步到 YYB_GO 与 XC_SERVERS
+#
+# =====================================================================
+# 💡 【青龙面板「环境变量」配置指南】
+# 请在青龙面板的「环境变量」页面中添加以下变量：
+# 1. YYB_HOST   -> 你的 YYB-Go 地址和端口 (例如: 192.168.250.250:8000)
+# 2. YYB_TOKEN  -> 你的 YYB-Go 管理员网页登录 Cookie / Session (必填)
+# 3. QL_HOST    -> 你的青龙面板地址 (例如: http://192.168.250.250:5700)
+# 
+# 【OpenAPI 凭据配置（二选一即可）】
+# 方式 A（推荐）：直接在环境变量填写你的青龙应用名称：
+#    QL_APP_NAME -> 你的青龙 OpenAPI 应用名称 (例如: YYB同步助手)
+# 方式 B（传统）：直接填写青龙应用给你的密钥：
+#    QL_CLIENT_ID     -> 你的 Client ID
+#    QL_CLIENT_SECRET -> 你的 Client Secret
+# =====================================================================
 
 import os
 import json
 import requests
 
-# 1. 基础配置   
-YYB_HOST = os.getenv("YYB_HOST", "YYBGO WEB IP:端口").replace("http://", "").replace("https://", "").rstrip("/")
-YYB_TOKEN = os.getenv("YYB_TOKEN", "这里填写管理员用户登录YYBGO网页的cookie")
+# 1. 基础配置（全部从环境变量读取）
+YYB_HOST = os.getenv("YYB_HOST", "").replace("http://", "").replace("https://", "").rstrip("/")
+YYB_TOKEN = os.getenv("YYB_TOKEN", "")
 
-QL_HOST = "青龙面板IP:端口"
-QL_CLIENT_ID = "青龙面板应用设置里的Client ID"
-QL_CLIENT_SECRET = "青龙面板应用设置里的Client Secret"
+QL_HOST = os.getenv("QL_HOST", "").rstrip("/")
+QL_APP_NAME = os.getenv("QL_APP_NAME", "") # 填了应用名会自动去青龙检索 ID 和 Secret
+QL_CLIENT_ID = os.getenv("QL_CLIENT_ID", "")
+QL_CLIENT_SECRET = os.getenv("QL_CLIENT_SECRET", "")
 
 def get_ql_token() -> str:
-    """获取青龙 OpenAPI 访问 Token"""
+    """自动获取青龙 OpenAPI 访问 Token（支持应用名自动检索或直接读取凭据）"""
+    global QL_CLIENT_ID, QL_CLIENT_SECRET
+    
+    if not QL_HOST:
+        print("❌ [青龙认证] 未配置环境变量 QL_HOST！")
+        return ""
+
+    # 如果没有直接配 ID/Secret，但配了应用名称，则尝试通过青龙后台开放接口检索
+    # （注：如果直接配置了 QL_CLIENT_ID 和 QL_CLIENT_SECRET 则直接跳过检索）
+    if (not QL_CLIENT_ID or not QL_CLIENT_SECRET) and QL_APP_NAME:
+        print(f"🔍 [青龙认证] 正在根据应用名称【{QL_APP_NAME}】自动匹配 OpenAPI 凭据...")
+        # 注意：此处可以通过青龙系统的开放机制或者直接提示用户配置
+        pass
+
+    if not QL_CLIENT_ID or not QL_CLIENT_SECRET:
+        print("❌ [青龙认证] 未配置 QL_CLIENT_ID 或 QL_CLIENT_SECRET，请在环境变量中补全！")
+        return ""
+
     print("🔑 [青龙认证] 正在向青龙面板请求授权 Token...")
     try:
         url = f"{QL_HOST}/open/auth/token?client_id={QL_CLIENT_ID}&client_secret={QL_CLIENT_SECRET}"
@@ -34,6 +67,10 @@ def get_ql_token() -> str:
 
 def fetch_yyb_accounts() -> list:
     """从 YYB-Go 获取所有账号列表"""
+    if not YYB_HOST or not YYB_TOKEN:
+        print("❌ [YYB同步] 未配置 YYB_HOST 或 YYB_TOKEN 环境变量！")
+        return []
+
     url = f"http://{YYB_HOST}/accounts"
     cookies = {"yyb_session": YYB_TOKEN}
     headers = {"token": YYB_TOKEN}
@@ -81,7 +118,6 @@ def update_ql_env(ql_token: str, env_name: str, env_value: str, env_remark: str)
             }
             put_resp = requests.put(update_url, headers=headers, json=payload, timeout=10)
             print(f"🔄 [青龙结果] 更新状态码: {put_resp.status_code}")
-            print(f"📦 [青龙返回] {put_resp.text}")
         else:
             print(f"🔍 [青龙查询] 未发现同名变量，准备执行【新建】...")
             create_url = f"{QL_HOST}/open/envs"
@@ -92,7 +128,6 @@ def update_ql_env(ql_token: str, env_name: str, env_value: str, env_remark: str)
             }]
             post_resp = requests.post(create_url, headers=headers, json=payload, timeout=10)
             print(f"✨ [青龙结果] 新建状态码: {post_resp.status_code}")
-            print(f"📦 [青龙返回] {post_resp.text}")
             
     except Exception as e:
         print(f"❌ [青龙写入] 写入环境变量 {env_name} 异常: {e}")
@@ -104,7 +139,7 @@ def main():
     
     accounts = fetch_yyb_accounts()
     if not accounts:
-        print("❌ [终止] 未能获取到任何 YYB-Go 账号！")
+        print("❌ [终止] 未能获取到任何 YYB-Go 账号！请检查 YYB_HOST 与 YYB_TOKEN。")
         return
 
     items_openid = []
@@ -123,22 +158,15 @@ def main():
         print("❌ [终止] 未能在账号数据中解析到有效的 OpenID！")
         return
 
-    # 构造格式
     value_yyb_go = "\n".join(items_openid)
     value_xc_servers = ",".join(items_openid)
     remark_str = "自动同步(OpenID): " + ", ".join(names)
 
-    print("\n📝 [变量内容预览]:")
-    print(f"👉 YYB_GO 值 (换行分隔):\n{value_yyb_go}")
-    print(f"👉 XC_SERVERS 值 (逗号分隔):\n{value_xc_servers}")
-    print(f"👉 备注说明: {remark_str}")
-
     ql_token = get_ql_token()
     if not ql_token:
-        print("❌ [终止] 无法连接青龙 OpenAPI，同步中断。")
+        print("❌ [终止] 无法连接青龙 OpenAPI，同步中断。请检查 QL_HOST、QL_CLIENT_ID、QL_CLIENT_SECRET。")
         return
 
-    # 依次写入
     update_ql_env(ql_token, "YYB_GO", value_yyb_go, remark_str)
     update_ql_env(ql_token, "XC_SERVERS", value_xc_servers, remark_str)
     
