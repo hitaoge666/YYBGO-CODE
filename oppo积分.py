@@ -29,6 +29,11 @@ from urllib.parse import quote
 
 import requests
 
+sleep_time = random.randint(10,600)
+print("随机等待",sleep_time,"秒")
+time.sleep(sleep_time)
+
+
 # =============================================================================
 # 常量配置（支持 YYB-Go 动态环境变量 YYB_GO 或 CODE_SERVER）
 # =============================================================================
