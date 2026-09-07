@@ -4,7 +4,7 @@
 # cron: 15 9 * * *
 # desc: 小蚕霸王餐签到活动
 
-
+"""
 小蚕霸王餐小程序 code 发帖版
 
 功能：
@@ -44,6 +44,12 @@ from typing import Any, Dict, List, Tuple
 from urllib.parse import quote
 
 import requests
+
+sleep_time = random.randint(10,600)
+print("随机等待",sleep_time,"秒")
+time.sleep(sleep_time)
+
+
 
 for stream in (sys.stdout, sys.stderr):
     try:
