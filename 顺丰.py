@@ -19,6 +19,7 @@ import random
 import re
 import time
 import traceback
+import urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from threading import Lock
