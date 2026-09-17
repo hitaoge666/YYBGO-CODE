@@ -19,7 +19,7 @@ import random
 import re
 import time
 import traceback
-import urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import urllib3
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from threading import Lock
@@ -27,6 +27,7 @@ from urllib.parse import quote, unquote
 
 import requests
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # 增加顶部随机延时，降低并发风控特征 (对齐 OPPO 和 小蚕)
 sleep_time = random.randint(10, 600)
 print(f"随机等待 {sleep_time} 秒，防黑号风控...")
