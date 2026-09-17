@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# name: 顺丰中秋博饼
+# cron: 30 8,14 * * *
+# desc: 顺丰速运+ 中秋博饼集礼盒 (YYB-Go 动态适配版)
+
 # 兼容 GBK 终端：强制 stdout/stderr 使用 UTF-8（不影响排版与格式）
 import sys as _sys
 try:
@@ -24,7 +28,7 @@ import requests
 
 # 增加顶部随机延时，降低并发风控特征 (对齐 OPPO 和 小蚕)
 sleep_time = random.randint(10, 600)
-print("随机等待", sleep_time, "秒")
+print(f"随机等待 {sleep_time} 秒，防黑号风控...")
 time.sleep(sleep_time)
 
 # ========== 企业微信推送配置（可选） ==========
