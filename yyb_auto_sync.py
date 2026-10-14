@@ -16,6 +16,7 @@
 # 2. 变量名: YYB_TOKEN
 #    变量值: 你登录 YYB-Go 网页后台后的管理员 Cookie 中的 yyb_session 值
 #    (可在浏览器 F12 开发者工具的 Application -> Cookies 中找到)
+#    (如果脚本哪天用不了就是这个cookie过期了，重新登录获取就行，大概一个月左右)
 #
 # 3. 变量名: QL_HOST
 #    变量值: 你的青龙面板访问地址
